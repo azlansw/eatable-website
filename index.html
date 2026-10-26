@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Eatable: can I eat this?</title>
+<meta name="description" content="Eatable checks groceries and restaurant menus against your food allergies, finds the foods behind your reactions, and gives the people who feed you one card to read." />
+<meta property="og:title" content="Eatable: can I eat this?" />
+<meta property="og:description" content="Scan food, check menus, find your triggers, share your allergy card." />
+<meta property="og:image" content="/img/card.jpg" />
+<meta name="theme-color" content="#F24E0E" />
+<link rel="icon" href="/favicon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@700&family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --orange: #F24E0E;
+    --orange-dark: #C23C05;
+    --orange-soft: #FFE7DA;
+    --ink: #1A1410;
+    --muted: #6B625C;
+    --paper: #FFFFFF;
+    --sunk: #F4F3F1;
+    --line: #E6E2DE;
+    --green: #14A155;
+    --red: #E5323A;
+    --yellow: #FFC93C;
+    --grape: #7B3FF2;
+    --display: 'Bricolage Grotesque', system-ui, sans-serif;
+    --body: 'Atkinson Hyperlegible', system-ui, sans-serif;
+    --label: 'Archivo Narrow', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 18px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; }
+  img { display: block; max-width: 100%; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+  .label { font-family: var(--label); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; font-size: 14px; }
+
+  /* Buttons: chunky, with a lip, like the app */
+  .btn { display: inline-flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 800; font-size: 18px; text-decoration: none; padding: 16px 26px; border-radius: 16px; border: 2px solid transparent; border-bottom-width: 6px; transition: transform .08s ease, border-bottom-width .08s ease; }
+  .btn:active { transform: translateY(3px); border-bottom-width: 3px; }
+  .btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+  .btn-white { background: #fff; color: var(--orange-dark); border-color: #fff; border-bottom-color: rgba(0,0,0,.2); }
+  .btn-ink { background: var(--ink); color: #fff; border-color: var(--ink); border-bottom-color: #000; }
+  .btn-orange { background: var(--orange); color: #fff; border-color: var(--orange); border-bottom-color: var(--orange-dark); }
+
+  /* Nav */
+  nav { position: absolute; top: 0; left: 0; right: 0; z-index: 5; }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 76px; }
+  .brand { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; font-family: var(--display); font-weight: 800; font-size: 26px; letter-spacing: -0.03em; }
+  nav .links { display: flex; gap: 28px; align-items: center; }
+  nav .links a { color: #fff; text-decoration: none; }
+  nav .links a.label:hover { text-decoration: underline; }
+
+  /* Hero: the question + the live app */
+  .hero { background: var(--orange); color: #fff; padding: 110px 0 0; overflow: hidden; }
+  .hero .wrap { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 40px; align-items: end; }
+  .poster { position: relative; padding-bottom: 70px; }
+  .stack { font-family: var(--display); font-weight: 800; font-size: clamp(76px, 11vw, 168px); line-height: 0.86; letter-spacing: -0.05em; margin: 0; }
+  .stack span { display: block; }
+  .food { display: inline-block; min-width: 3ch; transition: opacity .35s ease, transform .35s ease; }
+  .food.out { opacity: 0; transform: translateY(18%); }
+  .qmark { position: absolute; right: -10px; top: 0; width: clamp(120px, 15vw, 210px); }
+  .hero p.lede { font-size: 21px; max-width: 520px; margin: 28px 0 30px; }
+  .hero .ctas { display: flex; flex-wrap: wrap; gap: 14px; }
+  .phone { justify-self: center; width: 390px; height: 760px; background: #0E0B09; border-radius: 56px 56px 0 0; padding: 14px 14px 0; box-shadow: 0 -10px 60px rgba(0,0,0,.25); position: relative; }
+  .phone iframe { width: 100%; height: 100%; border: 0; border-radius: 42px 42px 0 0; background: var(--orange); display: block; }
+  .phone .tag { position: absolute; top: -40px; left: 50%; transform: translateX(-50%); white-space: nowrap; color: #fff; display: flex; align-items: center; gap: 8px; }
+  .phone .tag i { width: 10px; height: 10px; border-radius: 50%; background: #3BFF8E; box-shadow: 0 0 0 4px rgba(59,255,142,.25); }
+
+  /* Problem */
+  .problem { padding: 120px 0 90px; }
+  .problem h2 { font-family: var(--display); font-weight: 800; font-size: clamp(40px, 6vw, 84px); line-height: 0.95; letter-spacing: -0.04em; margin: 0 0 30px; max-width: 14ch; }
+  .problem h2 em { font-style: normal; color: var(--orange); }
+  .problem .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px; margin-top: 50px; }
+  .problem .cols div { border-top: 6px solid var(--ink); padding-top: 16px; }
+  .problem .cols h3 { font-family: var(--display); font-weight: 800; font-size: 24px; letter-spacing: -0.02em; margin: 0 0 8px; }
+  .problem .cols p { margin: 0; color: var(--muted); }
+
+  /* Features */
+  .feature { padding: 60px 0; }
+  .feature .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; align-items: center; }
+  .feature.flip .shot { order: 2; }
+  .shot { justify-self: center; width: 330px; border-radius: 40px; border: 10px solid var(--ink); overflow: hidden; height: 640px; background: #fff; }
+  .shot img { width: 100%; }
+  .shot.pair { width: auto; border: 0; border-radius: 0; height: auto; display: flex; gap: 18px; overflow: visible; background: none; }
+  .shot.pair img { width: 230px; height: 470px; object-fit: cover; object-position: top; border-radius: 30px; border: 8px solid var(--ink); }
+  .feature h3 { font-family: var(--display); font-weight: 800; font-size: clamp(38px, 4.6vw, 64px); line-height: 0.95; letter-spacing: -0.04em; margin: 12px 0 18px; }
+  .feature p { color: var(--muted); max-width: 470px; margin: 0 0 14px; }
+  .feature ul { padding: 0; margin: 18px 0 0; list-style: none; }
+  .feature li { padding: 10px 0; border-top: 2px solid var(--line); font-weight: 700; }
+  .pill { display: inline-block; font-family: var(--label); font-weight: 700; text-transform: uppercase; letter-spacing: .1em; font-size: 13px; padding: 6px 10px; border-radius: 8px; }
+  .p-green { background: #DDF5E7; color: #0E7A40; } .p-red { background: #FDE3E4; color: #B0222A; } .p-grape { background: #EEE6FF; color: #5B26C4; } .p-orange { background: var(--orange-soft); color: var(--orange-dark); }
+
+  /* Verdict strip */
+  .verdicts { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .verdicts div { padding: 46px 24px; font-family: var(--display); font-weight: 800; font-size: clamp(40px, 6vw, 92px); letter-spacing: -0.05em; line-height: 0.9; }
+  .verdicts small { display: block; font-family: var(--body); font-weight: 700; font-size: 17px; letter-spacing: 0; margin-top: 12px; }
+
+  /* Built with */
+  .built { padding: 100px 0; background: var(--sunk); }
+  .built h2 { font-family: var(--display); font-weight: 800; font-size: clamp(36px, 4.5vw, 60px); letter-spacing: -0.04em; margin: 0 0 30px; }
+  .stack-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 6px solid var(--ink); }
+  .stack-list div { padding: 18px 18px 18px 0; border-bottom: 2px solid var(--line); }
+  .stack-list b { display: block; font-family: var(--display); font-size: 20px; }
+  .stack-list span { color: var(--muted); font-size: 16px; }
+
+  /* Final CTA */
+  .end { background: var(--orange); color: #fff; padding: 110px 0 60px; text-align: left; }
+  .end h2 { font-family: var(--display); font-weight: 800; font-size: clamp(56px, 10vw, 150px); line-height: 0.86; letter-spacing: -0.05em; margin: 0 0 36px; }
+  footer { background: var(--ink); color: #CFC7C1; padding: 34px 0; font-size: 15px; }
+  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px; }
+
+  @media (max-width: 920px) {
+    nav .links a:not(.btn) { display: none; }
+    .hero .wrap, .feature .wrap { grid-template-columns: 1fr; }
+    .phone { display: none; }
+    .poster { padding-bottom: 80px; }
+    .feature.flip .shot { order: 0; }
+    .problem .cols, .stack-list, .verdicts { grid-template-columns: 1fr; }
+    .shot { width: 280px; height: 540px; }
+    .shot.pair img { width: 46vw; height: auto; }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .food { transition: none; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="Eatable home">
+      <svg width="36" height="35" viewBox="0 20 120 116" aria-hidden="true"><circle cx="60" cy="78" r="54" fill="#fff" stroke="#1A1410" stroke-width="5"/><circle cx="60" cy="78" r="40" fill="none" stroke="#F24E0E" stroke-width="4"/><path d="M40 74 Q46 66 52 74" stroke="#1A1410" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M68 74 Q74 66 80 74" stroke="#1A1410" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M46 92 Q60 108 74 92 Z" fill="#1A1410"/></svg>
+      eatable
+    </a>
+    <div class="links">
+      <a class="label" href="#how">How it works</a>
+      <a class="label" href="#built">Built with</a>
+      <a class="btn btn-ink" href="/app" style="padding:11px 18px;font-size:16px">Open the app</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="poster">
+      <h1 class="stack" aria-label="Can I eat this?">
+        <span>can</span><span>i</span><span>eat</span><span><span class="food" id="food">this</span></span>
+      </h1>
+      <svg class="qmark" viewBox="0 0 100 205" aria-hidden="true">
+        <path d="M14 40 C14 6 86 0 86 40 C86 68 50 70 50 98 L50 108" stroke="#fff" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <g transform="translate(16 128) scale(0.57)"><circle cx="60" cy="78" r="54" fill="#fff" stroke="#1A1410" stroke-width="5"/><circle cx="60" cy="78" r="40" fill="none" stroke="#F24E0E" stroke-width="4"/><path d="M40 74 Q46 66 52 74" stroke="#1A1410" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M68 74 Q74 66 80 74" stroke="#1A1410" stroke-width="5" fill="none" stroke-linecap="round"/><ellipse cx="34" cy="88" rx="7" ry="4.5" fill="#F24E0E" opacity=".35"/><ellipse cx="86" cy="88" rx="7" ry="4.5" fill="#F24E0E" opacity=".35"/><path d="M46 92 Q60 108 74 92 Z" fill="#1A1410"/></g>
+      </svg>
+      <p class="lede">Eatable checks groceries and restaurant menus against your food allergies, finds the foods behind reactions you can't explain, and gives the people who feed you one card to read.</p>
+      <div class="ctas">
+        <a class="btn btn-white" href="/app">Try the live app</a>
+        <a class="btn btn-ink" href="#how">See how it works</a>
+      </div>
+    </div>
+    <div class="phone" aria-label="Live demo of the Eatable app">
+      <div class="tag label"><i></i>Live: try it right here</div>
+      <iframe src="/app" title="Eatable app, live demo" loading="lazy" allow="geolocation; camera; clipboard-write"></iframe>
+    </div>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="wrap">
+    <span class="label" style="color:var(--orange)">The problem</span>
+    <h2>Every meal is a <em>guessing game.</em></h2>
+    <p style="max-width:640px;color:var(--muted)">For people with food allergies and conditions like EoE, eating takes research: reading every label, questioning every server, and trying to remember what you ate two days before a flare-up. The information is scattered, and the people cooking for you usually don't have it.</p>
+    <div class="cols">
+      <div><h3>Labels are hard to read</h3><p>Allergens hide under names like whey, casein and “natural flavors.”</p></div>
+      <div><h3>Menus don't tell you</h3><p>Most restaurants list dishes, not what's in them or what shares a fryer.</p></div>
+      <div><h3>Reactions come late</h3><p>Some show up hours or days after eating, so the cause is easy to miss.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="verdicts" aria-hidden="true">
+  <div style="background:var(--green);color:#fff">LOOKS GOOD.<small>Nothing on the label conflicts with your profile.</small></div>
+  <div style="background:var(--yellow);color:var(--ink)">ASK FIRST.<small>Might contain it. Check with staff.</small></div>
+  <div style="background:var(--red);color:#fff">NOPE.<small>May contain peanuts (cross-contact risk).</small></div>
+</div>
+
+<section id="how">
+  <div class="feature">
+    <div class="wrap">
+      <div class="shot pair"><img src="/img/home.jpg" alt="Eatable home screen asking what's on today's menu" /><img src="/img/nope.jpg" alt="Scan result: NOPE, contains peanut traces" /></div>
+      <div>
+        <span class="pill p-orange">Scan groceries</span>
+        <h3>Scan it. Get a straight answer.</h3>
+        <p>Scan a barcode and Eatable reads the ingredient list against your allergies and conditions, then answers in one word. It catches hidden names (whey = dairy) and “may contain” warnings, and skips false alarms like peanut butter on a dairy check.</p>
+        <ul><li>3M+ products from Open Food Facts</li><li>Explains every reason underneath</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="feature flip">
+    <div class="wrap">
+      <div class="shot"><img src="/img/menu.jpg" alt="Menu check for Chipotle showing dishes rated Likely OK or Caution" /></div>
+      <div>
+        <span class="pill p-green">Eat out</span>
+        <h3>Know what to order before you sit down.</h3>
+        <p>Find restaurants on the map, tap one, and Eatable's AI looks up its real menu online, rates each dish for you, and links the source. Snap a photo of a paper menu and it reads that too.</p>
+        <ul><li>Tells you what to ask the server</li><li>Check a menu for a friend, using their allergies</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="feature">
+    <div class="wrap">
+      <div class="shot"><img src="/img/triggers.jpg" alt="Triggers screen showing dairy 2.2 times more likely before reactions" /></div>
+      <div>
+        <span class="pill p-grape">Find triggers</span>
+        <h3>Find the food behind the reaction.</h3>
+        <p>Log what you eat and how you feel. Eatable compares every food against your normal reaction rate, accounting for reactions that show up up to two days later, and flags the ones that stand out, like dairy coming before reactions 2.2× more often than usual.</p>
+        <ul><li>Built-in statistics, explained by AI in plain words</li><li>Questions to bring to your doctor, never a diagnosis</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="feature flip">
+    <div class="wrap">
+      <div class="shot"><img src="/img/card.jpg" alt="Allergy card showing can't eat peanuts, EpiPen note, emergency contact and safe orders" /></div>
+      <div>
+        <span class="pill p-red">Allergy card</span>
+        <h3>One card for everyone who feeds you.</h3>
+        <p>Your allergies, what to do in an emergency, who to call, and the foods that are safe to order for you. Text it as a link anyone can open, or show the QR code. With an account, it stays up to date automatically.</p>
+        <ul><li>For servers, coaches, teachers and friends' parents</li><li>Your food logs stay on your phone</li></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="built" id="built">
+  <div class="wrap">
+    <span class="label" style="color:var(--orange)">Under the hood</span>
+    <h2>Built with</h2>
+    <div class="stack-list">
+      <div><b>React Native + Expo</b><span>One TypeScript codebase for iPhone, Android and web</span></div>
+      <div><b>Supabase</b><span>Accounts and live allergy cards, with row-level security</span></div>
+      <div><b>Open Food Facts</b><span>Free, open database of packaged food ingredients</span></div>
+      <div><b>OpenStreetMap</b><span>Restaurant map and search, no tracking</span></div>
+      <div><b>Google Gemini</b><span>Menu reading, web search for menus, plain-language insights</span></div>
+      <div><b>Custom trigger engine</b><span>48-hour reaction window, baseline comparison, small-sample smoothing</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="end">
+  <div class="wrap">
+    <h2>what's on today's menu?</h2>
+    <a class="btn btn-white" href="/app">Open Eatable</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>Built by Azlan for the 2026 Congressional App Challenge · Valencia, CA</span>
+    <span>Eatable helps you spot patterns. It isn't medical advice. In an emergency, use your epinephrine and call 911.</span>
+  </div>
+</footer>
+
+<script>
+  // Cycle the last word of the question (stops for reduced motion)
+  (function () {
+    var foods = ['this', 'pizza', 'sushi', 'boba', 'tacos', 'kiwi'];
+    var el = document.getElementById('food');
+    if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var i = 0;
+    setInterval(function () {
+      el.classList.add('out');
+      setTimeout(function () { i = (i + 1) % foods.length; el.textContent = foods[i]; el.classList.remove('out'); }, 350);
+    }, 1900);
+  })();
+</script>
+</body>
+</html>
